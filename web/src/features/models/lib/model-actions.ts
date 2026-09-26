@@ -22,8 +22,13 @@ import { toast } from 'sonner'
 
 import { handleServerError } from '@/lib/handle-server-error'
 
-import { updateModelStatus } from '../api'
+import {
+  batchDeleteModels,
+  updateModelStatus,
+  deleteModel as deleteModelAPI,
+} from '../api'
 import { invalidateVendorData } from '../vendor-api'
+import { modelsQueryKeys } from './query-keys'
 
 // ============================================================================
 // Model Status Actions
@@ -95,6 +100,77 @@ export async function handleToggleModelStatus(
     await handleDisableModel(id, queryClient, onSuccess)
   } else {
     await handleEnableModel(id, queryClient, onSuccess)
+  }
+}
+
+// ============================================================================
+// Model Delete Actions
+// =====================================================================
+/**
+ * Delete a single model
+ */
+export async function handleDeleteModel(
+  id: number,
+  queryClient?: QueryClient,
+  onSuccess?: () => void
+): Promise<void> {
+  try {
+    const response = await deleteModelAPI(id)
+    if (response.success) {
+      toast.success(i18next.t('Model deleted successfully'))
+      queryClient?.invalidateQueries({ queryKey: modelsQueryKeys.lists() })
+      onSuccess?.()
+    } else {
+      toast.error(response.message || i18next.t('Failed to delete model'))
+    }
+  } catch (error: unknown) {
+    toast.error(
+      (error as Error)?.message || i18next.t('Failed to delete model')
+    )
+  }
+}
+
+/**
+ * Batch delete models
+ */
+export async function handleBatchDeleteModels(
+  ids: number[],
+  queryClient?: QueryClient,
+  onSuccess?: (deletedCount: number) => void
+): Promise<void> {
+  if (ids.length === 0) {
+    toast.error(i18next.t('Please select at least one model'))
+    return
+  }
+
+  try {
+    const result = await batchDeleteModels(ids)
+    if (!result.success) {
+      throw new Error(result.message || i18next.t('Batch delete failed'))
+    }
+
+    const deletedCount = result.data?.deleted.length ?? 0
+    if (deletedCount > 0) {
+      toast.success(
+        i18next.t('Successfully deleted {{count}} model(s)', {
+          count: deletedCount,
+        })
+      )
+      queryClient?.invalidateQueries({ queryKey: modelsQueryKeys.lists() })
+      onSuccess?.(deletedCount)
+    }
+
+    const referencedCount = result.data?.referenced.length ?? 0
+    if (referencedCount > 0) {
+      toast.warning(
+        i18next.t(
+          '{{count}} deleted model(s) are still provided by enabled channels. Remove them from channel configuration to take them offline.',
+          { count: referencedCount }
+        )
+      )
+    }
+  } catch (error: unknown) {
+    toast.error((error as Error)?.message || i18next.t('Batch delete failed'))
   }
 }
 

@@ -49,6 +49,7 @@ type Pricing struct {
 	BillingUsageSchema     map[string]jsplugin.UsageFieldSchema `json:"billing_usage_schema,omitempty"`
 	BillingUsageExamples   []jsplugin.UsageExample              `json:"billing_usage_examples,omitempty"`
 	PricingVersion         string                               `json:"pricing_version,omitempty"`
+	Channels               []BoundChannel                       `json:"channels,omitempty"`
 }
 
 type PricingVendor struct {
@@ -427,6 +428,16 @@ func updatePricing() {
 			}
 		}
 		pricingMap = append(pricingMap, pricing)
+	}
+
+	// 批量查询渠道信息，附加到每个模型上
+	modelNames := make([]string, 0, len(pricingMap))
+	for _, p := range pricingMap {
+		modelNames = append(modelNames, p.ModelName)
+	}
+	channelsByModel, _ := GetBoundChannelsByModelsMap(modelNames)
+	for i := range pricingMap {
+		pricingMap[i].Channels = channelsByModel[pricingMap[i].ModelName]
 	}
 
 	// 防止大更新后数据不通用

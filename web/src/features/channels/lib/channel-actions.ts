@@ -441,6 +441,10 @@ export async function handleBatchEnable(
 /**
  * Batch disable channels
  */
+
+/**
+ * Batch disable channels
+ */
 export async function handleBatchDisable(
   ids: number[],
   queryClient?: QueryClient,
@@ -575,11 +579,15 @@ export async function handleDeleteAllDisabled(
   try {
     const response = await deleteDisabledChannels()
     if (response.success) {
-      toast.success(
-        i18next.t('{{count}} disabled channel(s) deleted', {
-          count: response.data || 0,
-        })
-      )
+      if ((response.data || 0) === 0) {
+        toast.info(i18next.t('No disabled channels to delete'))
+      } else {
+        toast.success(
+          i18next.t('{{count}} disabled channel(s) deleted', {
+            count: response.data,
+          })
+        )
+      }
       queryClient?.invalidateQueries({ queryKey: channelsQueryKeys.lists() })
       onSuccess?.(response.data || 0)
     } else {
@@ -641,6 +649,9 @@ export async function handleTestAllChannels(
         )
       )
       queryClient?.invalidateQueries({ queryKey: channelsQueryKeys.lists() })
+      setTimeout(() => {
+        queryClient?.invalidateQueries({ queryKey: channelsQueryKeys.lists() })
+      }, 5000)
       onSuccess?.()
     } else {
       handleServerError(

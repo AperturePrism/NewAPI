@@ -383,7 +383,10 @@ func (r *GeneralOpenAIRequest) GetSystemRoleName() string {
 	return "system"
 }
 
-const CustomType = "custom"
+const (
+	CustomType   = "custom"
+	FunctionType = "function"
+)
 
 type ToolCallRequest struct {
 	ID       string          `json:"id,omitempty"`
@@ -396,8 +399,10 @@ type FunctionRequest struct {
 	Description string `json:"description,omitempty"`
 	Name        string `json:"name"`
 	Parameters  any    `json:"parameters,omitempty"`
-	Arguments   string `json:"arguments,omitempty"`
-	Strict      *bool  `json:"strict,omitempty"`
+	// Strict enables structured-outputs schema adherence for the tool. It must stay
+	// a pointer so that an explicit false is forwarded upstream instead of dropped.
+	Arguments string `json:"arguments,omitempty"`
+	Strict    *bool  `json:"strict,omitempty"`
 }
 
 type StreamOptions struct {

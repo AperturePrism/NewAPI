@@ -89,7 +89,11 @@ export function usePricingColumns(
         <DataTableColumnHeader column={column} title={t('Price')} />
       ),
       cell: ({ row }) => (
-        <ModelPriceCell model={row.original} options={options} />
+        <ModelPriceCell
+          model={row.original}
+          options={options}
+          showDualCurrencyHint
+        />
       ),
       size: 180,
       enableSorting: false,

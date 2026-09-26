@@ -31,7 +31,13 @@ import {
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { isTokenBasedModel } from '../lib/model-helpers'
-import { formatPrice, formatRequestPrice } from '../lib/price'
+import {
+  formatDualCurrencyFromUSD,
+  formatPrice,
+  formatRequestPrice,
+  getRequestPriceUSD,
+  getTokenPriceUSD,
+} from '../lib/price'
 import { taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, TokenUnit } from '../types'
 
@@ -47,6 +53,7 @@ export function ModelPriceCell(props: {
   model: PricingModel
   options?: ModelPriceCellOptions
   showExpression?: boolean
+  showDualCurrencyHint?: boolean
 }) {
   const { t, i18n } = useTranslation()
   const currency = useSystemConfigStore((state) => state.config.currency)
@@ -84,6 +91,10 @@ export function ModelPriceCell(props: {
     ]
   )
   let metrics: Array<{ label: string; value: string }>
+  // Secondary line showing the same prices in the other configured currency.
+  // Only applies to token/per-request models: dynamic expression pricing already
+  // renders its own unit labels, and dual output there would be misleading.
+  let dualCurrencyHint: string | null = null
   const providerCaption = dynamic?.providerCount
     ? t('{{count}} providers', { count: dynamic.providerCount })
     : ''
@@ -216,6 +227,29 @@ export function ModelPriceCell(props: {
           ),
         },
       ]
+      if (props.showDualCurrencyHint) {
+        const inputUSD = getTokenPriceUSD(
+          props.model,
+          'input',
+          tokenUnit,
+          options.showRechargePrice,
+          options.priceRate,
+          options.usdExchangeRate,
+          options.selectedGroup
+        )
+        const outputUSD = getTokenPriceUSD(
+          props.model,
+          'output',
+          tokenUnit,
+          options.showRechargePrice,
+          options.priceRate,
+          options.usdExchangeRate,
+          options.selectedGroup
+        )
+        if (Number.isFinite(inputUSD) && Number.isFinite(outputUSD)) {
+          dualCurrencyHint = `${formatDualCurrencyFromUSD(inputUSD)} / ${formatDualCurrencyFromUSD(outputUSD)}`
+        }
+      }
     } else {
       metrics = [
         {
@@ -231,6 +265,21 @@ export function ModelPriceCell(props: {
         },
       ]
       caption = `${currencyLabel} / ${t('request')}`
+      if (props.showDualCurrencyHint) {
+        const requestUSD = getRequestPriceUSD(
+          props.model,
+          options.showRechargePrice,
+          options.priceRate,
+          options.usdExchangeRate,
+          options.selectedGroup
+        )
+        if (Number.isFinite(requestUSD)) {
+          dualCurrencyHint = formatDualCurrencyFromUSD(requestUSD, {
+            digitsLarge: 4,
+            digitsSmall: 4,
+          })
+        }
+      }
     }
   }
   return (
@@ -264,6 +313,11 @@ export function ModelPriceCell(props: {
       >
         {caption}
       </span>
+      {props.showDualCurrencyHint && dualCurrencyHint ? (
+        <span className='text-muted-foreground/40 block text-[10px] tabular-nums'>
+          {dualCurrencyHint}
+        </span>
+      ) : null}
     </span>
   )
 }

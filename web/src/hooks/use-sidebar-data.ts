@@ -79,6 +79,11 @@ export function useSidebarData(): SidebarData {
             icon: Activity,
           },
           {
+            title: t('Model Monitoring'),
+            url: '/model-monitoring',
+            icon: Activity,
+          },
+          {
             title: t('Dashboard'),
             url: '/dashboard/models',
             icon: LayoutDashboard,
@@ -150,6 +155,11 @@ export function useSidebarData(): SidebarData {
           {
             title: t('Redemption Codes'),
             url: '/redemption-codes',
+            icon: Ticket,
+          },
+          {
+            title: t('Invite Codes', { defaultValue: '邀请码' }),
+            url: '/invite-codes',
             icon: Ticket,
           },
           {

@@ -42,8 +42,10 @@ import { SettingsPageTitleStatusPortal } from '../components/settings-page-conte
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
 import { positiveIntegerSchema } from '../utils/numeric-field'
+import { RatioBatchAdjustDialog } from './dialogs/ratio-batch-adjust-dialog'
 import { GroupRatioForm } from './group-ratio-form'
 import { ModelRatioForm } from './model-ratio-form'
+import { PricingModelBatchManager } from './pricing-model-batch-manager'
 import { ToolPriceSettings } from './tool-price-settings'
 import { UpstreamRatioSync } from './upstream-ratio-sync'
 import {
@@ -155,6 +157,7 @@ type RatioTabId =
   | 'groups'
   | 'tool-prices'
   | 'upstream-sync'
+  | 'batch-management'
 
 type RatioSettingsCardProps = {
   modelDefaults: ModelFormValues
@@ -174,6 +177,7 @@ export function RatioSettingsCard({
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [batchAdjustOpen, setBatchAdjustOpen] = useState(false)
 
   const pricingQuery = useModelPricing()
   const savePricing = useSaveModelPricing()
@@ -459,6 +463,7 @@ export function RatioSettingsCard({
     groups: 'Group ratios',
     'tool-prices': 'Tool prices',
     'upstream-sync': 'Upstream price sync',
+    'batch-management': 'Batch management',
   }
   const tabsGridClass =
     {
@@ -520,6 +525,9 @@ export function RatioSettingsCard({
     if (tab === 'tool-prices') {
       return <ToolPriceSettings defaultValue={toolPricesDefault} />
     }
+    if (tab === 'batch-management') {
+      return <PricingModelBatchManager />
+    }
     return <UpstreamRatioSync />
   }
 
@@ -544,6 +552,15 @@ export function RatioSettingsCard({
               : undefined
           }
         >
+          <div className='mb-4 flex justify-end'>
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={() => setBatchAdjustOpen(true)}
+            >
+              {t('Batch Adjust Prices')}
+            </Button>
+          </div>
           {renderTabContent(defaultTab)}
         </SettingsSection>
       ) : (
@@ -569,6 +586,11 @@ export function RatioSettingsCard({
           </SettingsSection>
         </Tabs>
       )}
+
+      <RatioBatchAdjustDialog
+        open={batchAdjustOpen}
+        onOpenChange={setBatchAdjustOpen}
+      />
 
       <ConfirmDialog
         open={confirmOpen}

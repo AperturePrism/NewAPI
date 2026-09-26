@@ -42,6 +42,7 @@ type DialogType =
   | 'missing-models'
   | 'sync-wizard'
   | 'prefill-groups'
+  | 'batch-import-models'
   | 'description'
   | null
 

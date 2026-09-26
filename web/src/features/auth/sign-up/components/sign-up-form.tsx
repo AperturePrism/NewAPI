@@ -95,6 +95,7 @@ export function SignUpForm({
       email: '',
       password: '',
       confirmPassword: '',
+      inviteCode: '',
     },
   })
 
@@ -108,6 +109,8 @@ export function SignUpForm({
     status?.data?.oauth_register_enabled ??
     true
   const hasWeChatLogin = Boolean(status?.wechat_login)
+  const inviteCodeEnabled = Boolean(status?.invite_code_register_enabled ?? status?.data?.invite_code_register_enabled)
+  const inviteCodeOptional = Boolean(status?.invite_code_enabled ?? status?.data?.invite_code_enabled) && !inviteCodeEnabled
   const turnstileReady = !isTurnstileEnabled || Boolean(turnstileToken)
 
   const wechatQrCodeUrl = useMemo(() => {
@@ -167,6 +170,7 @@ export function SignUpForm({
         email: data.email || undefined,
         verification_code: verificationCode || undefined,
         aff_code: getAffiliateCode(),
+        invite_code: data.inviteCode || undefined,
         turnstile: turnstileToken,
       })
 
@@ -348,6 +352,35 @@ export function SignUpForm({
               </Button>
             </div>
           </>
+        )}
+
+        {/* Invite Code */}
+        {(inviteCodeEnabled || inviteCodeOptional) && (
+          <FormField
+            control={form.control}
+            name='inviteCode'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {inviteCodeEnabled
+                    ? t('Invitation code', { defaultValue: '邀请码' })
+                    : t('Invitation code (optional)', {
+                        defaultValue: '邀请码（选填）',
+                      })}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={t('Enter invitation code', {
+                      defaultValue: '请输入邀请码',
+                    })}
+                    maxLength={32}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
 
         {/* Turnstile */}
